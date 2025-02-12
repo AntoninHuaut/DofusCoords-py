@@ -5,7 +5,7 @@ import win32gui
 import win32con
 import os
 from timeit import default_timer as timer
-from image import cleanCoordinate, preprocess_image, readtext, screenshot
+from image import  read_coordinates, screenshot_and_process
 from processus import find_window_by_pid, get_pid_by_name
 
 ocr_reader = easyocr.Reader(['en'], gpu = True)
@@ -27,34 +27,13 @@ def scheduled_task():
         pass
     
     with mss.mss() as sct:
-        timeStart = timer()
+        time_start = timer()
 
-        screenshot(sct, {"top": 90, "left": 5, "width":120, "height":30}, "images/app_screenshot.png")
-        processed_img = preprocess_image("images/app_screenshot.png")
-        cv2.imwrite('images/processed_screenshot.png', processed_img)
-        raw_result = readtext(ocr_reader, 'images/processed_screenshot.png')
-
-        x,y,err = handleRawResult(raw_result)
+        path = screenshot_and_process(sct, {"top": 90, "left": 5, "width":120, "height":30})
+        x, y, err = read_coordinates(ocr_reader, path)
         if err is not None:
             print(err)
             return
         
-        timeEnd = timer()
-        print(f"x: {x:.4}, y: {y:.4}, time: {timeEnd - timeStart:.3f}s")
-
-def handleRawResult(raw_result):
-    while isinstance(raw_result, list):
-        if len(raw_result) == 0:
-            return None, None, "no coordinates extracted"
-        raw_result = raw_result[len(raw_result) - 1]
-
-    if "," in raw_result:
-        raw_result = raw_result.replace(",", " ")
-   
-    raw_result = raw_result.split()
-
-    if len(raw_result) < 2:
-        return None, None, "no coordinates found"
-
-    x, y = cleanCoordinate(raw_result[0]), cleanCoordinate(raw_result[1])
-    return x,y,None
+        time_end = timer()
+        print(f"x: {x:.4}, y: {y:.4}, time: {time_end - time_start:.3f}s")
