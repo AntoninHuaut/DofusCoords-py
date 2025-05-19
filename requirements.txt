@@ -26,7 +26,7 @@ pywin32==308
 PyYAML==6.0.2
 scikit-image==0.25.1
 scipy==1.15.1
-setuptools==75.8.0
+setuptools==78.1.1
 shapely==2.0.7
 sympy==1.13.1
 tifffile==2025.1.10
