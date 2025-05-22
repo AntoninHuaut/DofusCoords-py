@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Coordinates WebSocket Client</title>
+    <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"
+            integrity="sha384-mkQ3/7FUtcGyoppY6bz/PORYoGqOl7/aSUMn2ymDOJcapfS6PHqxhRTMh1RR0Q6+"
+            crossorigin="anonymous"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const socket = io('http://localhost:5000');
+            socket.on('coordinates_update', function (coordinates) {
+                document.getElementById('coordinates').textContent =
+                    JSON.stringify(coordinates, null, 2);
+            });
+        });
+    </script>
+</head>
+<body>
+<h1>Live Coordinates</h1>
+<pre id="coordinates"></pre>
+</body>
+</html>

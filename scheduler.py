@@ -1,39 +1,48 @@
-import cv2
+import os
+import time
+from timeit import default_timer as timer
+
 import easyocr
 import mss
-import win32gui
-import win32con
-import os
-from timeit import default_timer as timer
-from image import  read_coordinates, screenshot_and_process
-from processus import find_window_by_pid, get_pid_by_name
+import yaml
 
-ocr_reader = easyocr.Reader(['en'], gpu = True)
+from image import read_coordinates, screenshot_and_process
+from processus import get_pid_by_name
+
+ocr_reader = easyocr.Reader(['en'], gpu=True)
 if not os.path.exists("images/"):
     os.makedirs("images/")
 
-def scheduled_task():
+latest_coordinates = {"x": None, "y": None, "timestamp": None}
+
+with open("config.yaml") as f:
+    cfg = yaml.load(f, Loader=yaml.FullLoader)
+
+
+def scheduled_task(check_coordinates_change_func):
+    global latest_coordinates
+
+    cfg_screenshot = cfg["screenshot"]
+
     target_pid = get_pid_by_name("dofus")
-    hwnds = find_window_by_pid(target_pid)
-    if not hwnds:
-        print(f"No window found for process ID {target_pid}.")
+    if not target_pid:
+        print(f"No process ID found.")
         return
-    
-    hwnd = hwnds[0]
-    win32gui.ShowWindow(hwnd, win32con.SW_RESTORE)
-    try:
-        win32gui.SetForegroundWindow(hwnd)
-    except Exception as e:
-        pass
-    
+
     with mss.mss() as sct:
         time_start = timer()
 
-        path = screenshot_and_process(sct, {"top": 90, "left": 5, "width":120, "height":30})
+        path = screenshot_and_process(sct, cfg_screenshot)
         x, y, err = read_coordinates(ocr_reader, path)
         if err is not None:
             print(err)
             return
-        
+
         time_end = timer()
+
+        latest_coordinates["x"] = x
+        latest_coordinates["y"] = y
+        latest_coordinates["timestamp"] = time.time()
+
         print(f"x: {x:.4}, y: {y:.4}, time: {time_end - time_start:.3f}s")
+        check_coordinates_change_func()

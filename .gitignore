@@ -1,3 +1,5 @@
 venv/
-images/
+.idea/
 __pycache__/
+images/
+config.yaml
